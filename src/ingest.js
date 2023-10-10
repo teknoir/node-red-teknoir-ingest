@@ -13,6 +13,12 @@ module.exports = function(RED) {
         text: "connected_with_errors"
     };
 
+    const STATUS_CONNECTED_WITH_JSON_PARSE_ERRORS = {
+        fill: "green",
+        shape: "ring",
+        text: "connected_with_json_parse_errors"
+    };
+
     const STATUS_DISCONNECTED = {
         fill: "red",
         shape: "dot",
@@ -76,7 +82,17 @@ module.exports = function(RED) {
 
             // If the configuration property asked for JSON, then convert to an object.
             if (config.assumeJSON === true) {
-                msg.payload = JSON.parse(RED.util.ensureString(message.data));
+                try {
+                    msg.payload = JSON.parse(RED.util.ensureString(message.data));
+                } catch (e) {
+                    if (e.details) {
+                        node.error(e.details);
+                    } else {
+                        console.log(e);
+                    }
+                    node.status(STATUS_CONNECTED_WITH_JSON_PARSE_ERRORS);
+                    return;
+                }
             }
 
             try {
